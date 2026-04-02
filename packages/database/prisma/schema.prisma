@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(cuid())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  spotifyAccounts SpotifyAccount[]
+  sessions        Session[]
+
+  @@map("users")
+}
+
+model SpotifyAccount {
+  id             String    @id @default(cuid())
+  userId         String
+  spotifyUserId  String    @unique
+  displayName    String?
+  email          String?
+  product        String?
+  accessToken    String?
+  refreshToken   String
+  scope          String?
+  tokenExpiresAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions       Session[]
+
+  @@index([userId])
+  @@map("spotify_accounts")
+}
+
+model Session {
+  id                String             @id @default(cuid())
+  userId            String?
+  spotifyAccountId  String?
+  title             String
+  status            String
+  lastPrompt        String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  user              User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  spotifyAccount    SpotifyAccount?    @relation(fields: [spotifyAccountId], references: [id], onDelete: SetNull)
+  vibeState         SessionVibeState?
+  messages          SessionMessage[]
+  trackDecisions    TrackDecision[]
+  playbackSnapshots PlaybackSnapshot[]
+
+  @@index([userId])
+  @@index([spotifyAccountId])
+  @@map("sessions")
+}
+
+model SessionVibeState {
+  id             String   @id @default(cuid())
+  sessionId      String   @unique
+  energy         String
+  mood           String?
+  languagesJson  String
+  mainstreamness String
+  genreHintsJson String
+  setting        String?
+  updatedAt      DateTime @updatedAt
+  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("session_vibe_states")
+}
+
+model SessionMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      String
+  text      String
+  createdAt DateTime @default(now())
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@map("session_messages")
+}
+
+model TrackDecision {
+  id              String    @id @default(cuid())
+  sessionId       String
+  spotifyTrackId  String
+  title           String
+  artistNamesJson String
+  reason          String
+  score           Float
+  source          String
+  position        Int
+  queuedAt        DateTime?
+  createdAt       DateTime  @default(now())
+  session         Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, position])
+  @@map("track_decisions")
+}
+
+model PlaybackSnapshot {
+  id              String   @id @default(cuid())
+  sessionId       String
+  source          String
+  isPlaying       Boolean
+  deviceId        String?
+  deviceName      String?
+  trackId         String?
+  trackTitle      String?
+  artistNamesJson String
+  albumName       String?
+  imageUrl        String?
+  progressMs      Int?
+  durationMs      Int?
+  fetchedAt       DateTime
+  session         Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, fetchedAt])
+  @@map("playback_snapshots")
+}

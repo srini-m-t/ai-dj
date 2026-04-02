@@ -1,0 +1,22 @@
+{
+  "name": "@ai-dj/database",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-dj/shared": "workspace:*",
+    "@prisma/client": "^6.16.1",
+    "prisma": "^6.16.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.5.4"
+  }
+}
